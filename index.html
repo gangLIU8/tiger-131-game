@@ -22,7 +22,8 @@
   #app { position: fixed; inset: 0; }
 
   /* ---------- HUD ---------- */
-  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: 0; transition: opacity .6s ease; }
+  #hud.on { opacity: 1; }
   #hud .top {
     position: absolute; top: 0; left: 0; right: 0;
     display: flex; align-items: flex-start; justify-content: space-between;
@@ -78,8 +79,8 @@
   .overlay {
     position: fixed; inset: 0; z-index: 20;
     display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(120% 100% at 50% 30%, rgba(20,22,25,.82), rgba(6,7,8,.96));
-    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    background: radial-gradient(120% 100% at 50% 30%, rgba(16,18,21,.52), rgba(6,7,8,.86));
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
   }
   .overlay.hidden { display: none; }
   .card { width: min(560px, 88vw); text-align: center; }
@@ -627,7 +628,7 @@ loader.load('./tiger.glb', (gltf) => {
   rig.ready = true;
   document.getElementById('loading').style.opacity = '0';
   setTimeout(() => document.getElementById('loading').style.display = 'none', 650);
-  document.getElementById('start').classList.remove('hidden');
+  if (!state.running) document.getElementById('start').classList.remove('hidden');
   window.__game = { state, targets, camera, fire, startGame, resetGame, rig, shells, win };
   window.__dbg = () => ({
     ready: rig.ready,
@@ -1184,12 +1185,23 @@ function segSphere(a, b, c, r) {
 
 /* ---- 相机 ---- */
 let camYaw = 0;
+let introT = 0;
 function updateCamera(dt) {
+  // 开始页 / 胜利页：镜头缓慢绕着坦克转
+  if (!state.running) {
+    introT += dt;
+    const a = introT * 0.16;
+    camera.position.set(state.x + Math.sin(a) * 12.5, 4.4, state.z + Math.cos(a) * 12.5);
+    camera.lookAt(state.x, 1.7, state.z);
+    sun.position.set(state.x + 40, 62, state.z + 26);
+    sun.target.position.set(state.x, 0, state.z);
+    sun.target.updateMatrixWorld();
+    return;
+  }
+
   camDist += (camDistTarget - camDist) * Math.min(1, dt * 6);
-  // 相机跟随车身，但稍微偏向炮塔方向，扩大有效瞄准角度
-  const bias = THREE.MathUtils.clamp(state.turretYaw * 0.35, -0.38, 0.38);
-  const wantYaw = state.yaw + bias;
-  let dy = normalizeAngle(wantYaw - camYaw);
+  // 相机方向平滑跟随车身（不跟炮塔，否则鼠标指向的世界点会跟着漂）
+  let dy = normalizeAngle(state.yaw - camYaw);
   camYaw += dy * Math.min(1, dt * 2.6);
 
   const behind = new THREE.Vector3(Math.sin(camYaw), 0, Math.cos(camYaw));
@@ -1248,6 +1260,7 @@ function startGame() {
   if (actx && actx.state === 'suspended') actx.resume();
   document.getElementById('start').classList.add('hidden');
   document.getElementById('win').classList.add('hidden');
+  document.getElementById('hud').classList.add('on');
   state.running = true;
   state.over = false;
   camYaw = state.yaw;
