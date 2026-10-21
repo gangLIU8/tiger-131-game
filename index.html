@@ -6,11 +6,11 @@
 <title>虎式 I 型 · 131 · 靶场</title>
 <style>
   :root {
-    --fg: #f0ece2;
-    --dim: #b9b2a2;
-    --accent: #d8a24a;
-    --line: rgba(255,255,255,.16);
-    --panel: rgba(14,15,17,.62);
+    --fg: #efe8d6;
+    --dim: rgba(239,232,214,.72);
+    --accent: #e8761f;
+    --line: rgba(239,232,214,.32);
+    --panel: rgba(10,9,7,.55);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -24,54 +24,75 @@
   /* ---------- HUD ---------- */
   #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: 0; transition: opacity .6s ease; }
   #hud.on { opacity: 1; }
+  #hud .vig {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 48%, rgba(0,0,0,0) 44%, rgba(0,0,0,.5) 100%);
+  }
+  #hud .grain {
+    position: absolute; inset: 0; opacity: .05; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  }
   #hud .top {
     position: absolute; top: 0; left: 0; right: 0;
     display: flex; align-items: flex-start; justify-content: space-between;
-    padding: 16px 20px;
-    background: linear-gradient(rgba(0,0,0,.42), rgba(0,0,0,0));
+    padding: 34px 44px 0;
   }
-  .stat { display: flex; gap: 26px; }
-  .stat .item { line-height: 1; }
-  .stat .k { font-size: 10px; letter-spacing: .18em; color: var(--dim); text-transform: uppercase; }
-  .stat .v { font-size: 30px; font-weight: 700; margin-top: 6px; font-variant-numeric: tabular-nums; }
-  .stat .v small { font-size: 14px; color: var(--dim); font-weight: 400; }
-  #clock { font-size: 20px; color: var(--dim); font-variant-numeric: tabular-nums; letter-spacing: .08em; }
+  .stack { display: flex; flex-direction: column; gap: 44px; }
+  .stat .k { font-size: 14px; letter-spacing: .3em; color: var(--fg); opacity: .92; }
+  .stat .v {
+    font-size: 46px; line-height: 1; margin-top: 7px; color: var(--fg);
+    font-variant-numeric: tabular-nums; letter-spacing: .03em;
+  }
+  .stat .v small { font-size: 24px; opacity: .72; margin-left: 4px; letter-spacing: .06em; }
+  .stat.dist .v { font-size: 42px; }
+  .stat.dist .v small { font-size: 18px; margin-left: 5px; }
+  .lamps { display: grid; grid-template-columns: repeat(4, 30px); gap: 6px; margin-top: 12px; }
+  .lamps i { display: block; height: 13px; border: 1px solid rgba(239,232,214,.5); background: rgba(10,9,7,.4); }
+  .lamps i.on {
+    background: var(--accent); border-color: rgba(232,118,31,.95);
+    box-shadow: 0 0 11px rgba(232,118,31,.6);
+  }
+  .stat .scale {
+    width: 220px; height: 12px; margin-top: 9px;
+    border-bottom: 1px solid rgba(239,232,214,.45);
+    background: repeating-linear-gradient(90deg, rgba(239,232,214,.7) 0 1px, transparent 1px 21px);
+  }
+  #clock {
+    font-size: 28px; color: var(--fg); opacity: .85; letter-spacing: .05em;
+    font-variant-numeric: tabular-nums; font-family: Consolas, "SFMono-Regular", monospace;
+  }
+  #hud .top, #hud .bottom {
+    text-shadow: 0 1px 2px rgba(0,0,0,.9), 0 2px 10px rgba(0,0,0,.55);
+  }
 
   /* 准星 */
-  #cross {
-    position: absolute; left: 50%; top: 50%; width: 46px; height: 46px;
-    margin: -23px 0 0 -23px; opacity: .9;
-  }
-  #cross i {
-    position: absolute; background: rgba(255,255,255,.85); box-shadow: 0 0 3px rgba(0,0,0,.8);
-  }
-  #cross .h1 { left: 0; top: 22px; width: 14px; height: 2px; }
-  #cross .h2 { right: 0; top: 22px; width: 14px; height: 2px; }
-  #cross .v1 { top: 0; left: 22px; height: 14px; width: 2px; }
-  #cross .v2 { bottom: 0; left: 22px; height: 14px; width: 2px; }
-  #cross .dot { left: 21px; top: 21px; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+  #cross { position: absolute; left: 50%; top: 50%; width: 32px; height: 32px; margin: -16px 0 0 -16px; }
+  #cross i { position: absolute; background: rgba(239,232,214,.9); box-shadow: 0 0 5px rgba(0,0,0,.85); }
+  #cross .h1 { left: 0; top: 15.5px; width: 8px; height: 1px; }
+  #cross .h2 { right: 0; top: 15.5px; width: 8px; height: 1px; }
+  #cross .v1 { top: 0; left: 15.5px; width: 1px; height: 8px; }
+  #cross .v2 { bottom: 0; left: 15.5px; width: 1px; height: 8px; }
+  #cross .dot { left: 14px; top: 14px; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px rgba(232,118,31,.7); }
 
-  /* 底部：装填 + 速度 */
+  /* 底部：装填 + 速度表 */
   #hud .bottom {
     position: absolute; left: 0; right: 0; bottom: 0;
     display: flex; align-items: flex-end; justify-content: space-between;
-    padding: 0 20px 18px;
-    background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.45));
+    padding: 0 44px 40px;
   }
-  #reload { width: 190px; }
-  #reload .bar {
-    height: 6px; background: rgba(255,255,255,.16); border-radius: 3px; overflow: hidden;
-  }
-  #reload .bar i { display: block; height: 100%; width: 0%; background: var(--accent); transition: width .05s linear; }
-  #reload .lbl { font-size: 11px; letter-spacing: .16em; color: var(--dim); margin-top: 8px; }
-  #spd { text-align: right; }
-  #spd b { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  #spd span { font-size: 11px; color: var(--dim); letter-spacing: .12em; }
+  #reload { width: 380px; }
+  #reload .lbl { font-size: 14px; letter-spacing: .3em; color: var(--fg); opacity: .92; margin-bottom: 11px; }
+  #reload .bar { position: relative; height: 17px; border: 1px solid rgba(239,232,214,.5); background: rgba(10,9,7,.42); }
+  #reload .bar i { position: absolute; left: 3px; top: 3px; bottom: 3px; width: 0; max-width: calc(100% - 6px); background: rgba(232,118,31,.92); transition: width .05s linear; }
+  #reload .bar b { position: absolute; top: -5px; width: 1px; height: 27px; background: rgba(239,232,214,.55); }
+  #dial { line-height: 0; }
+  #dial svg { display: block; width: 164px; height: 164px; }
 
   /* 提示 */
   #tip {
     position: absolute; left: 50%; bottom: 84px; transform: translateX(-50%);
-    font-size: 13px; color: var(--dim); letter-spacing: .06em; text-align: center;
+    font-size: 13px; color: rgba(239,232,214,.62); letter-spacing: .1em; text-align: center;
+    text-shadow: 0 1px 3px rgba(0,0,0,.9);
     transition: opacity .6s ease;
   }
 
@@ -79,33 +100,43 @@
   .overlay {
     position: fixed; inset: 0; z-index: 20;
     display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(120% 100% at 50% 30%, rgba(16,18,21,.52), rgba(6,7,8,.86));
-    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    background: radial-gradient(120% 100% at 50% 32%, rgba(20,17,13,.66), rgba(5,5,5,.93));
   }
   .overlay.hidden { display: none; }
   .card { width: min(560px, 88vw); text-align: center; }
-  .card .eyebrow { font-size: 11px; letter-spacing: .34em; color: var(--accent); text-transform: uppercase; }
-  .card h1 { font-size: clamp(30px, 6vw, 46px); margin: 14px 0 6px; letter-spacing: .04em; font-weight: 700; }
-  .card h2 { font-size: 13px; font-weight: 400; color: var(--dim); margin: 0 0 26px; letter-spacing: .1em; }
+  .card .eyebrow { font-size: 11px; letter-spacing: .38em; color: var(--accent); text-transform: uppercase; }
+  .card h1 {
+    font-size: clamp(32px, 6vw, 50px); margin: 16px 0 10px;
+    letter-spacing: .12em; font-weight: 600;
+  }
+  .card h1::after {
+    content: ""; display: block; width: 56px; height: 1px;
+    background: rgba(232,118,31,.9); margin: 18px auto 0;
+  }
+  .card h2 { font-size: 13px; font-weight: 400; color: rgba(239,232,214,.6); margin: 0 0 28px; letter-spacing: .14em; }
   .card .keys {
-    display: grid; grid-template-columns: auto 1fr; gap: 8px 16px;
-    text-align: left; font-size: 13px; color: var(--dim);
-    max-width: 380px; margin: 0 auto 28px;
+    display: grid; grid-template-columns: auto 1fr; gap: 9px 18px;
+    text-align: left; font-size: 13px; color: rgba(239,232,214,.68);
+    max-width: 400px; margin: 0 auto 30px;
   }
   .card .keys kbd {
-    background: rgba(255,255,255,.1); border: 1px solid var(--line); border-radius: 4px;
-    padding: 3px 8px; font-family: inherit; font-size: 12px; color: var(--fg); white-space: nowrap;
+    background: transparent; border: 1px solid rgba(239,232,214,.3);
+    padding: 3px 9px; font-family: inherit; font-size: 12px; letter-spacing: .08em;
+    color: var(--fg); white-space: nowrap;
   }
   .btn {
     pointer-events: auto; cursor: pointer; border: 1px solid var(--accent);
-    background: rgba(216,162,74,.12); color: #f4d9a8;
-    padding: 13px 42px; font-size: 15px; letter-spacing: .22em; border-radius: 2px;
-    font-family: inherit; transition: background .2s, transform .1s;
+    background: transparent; color: var(--fg);
+    padding: 14px 46px; font-size: 15px; letter-spacing: .3em;
+    font-family: inherit; transition: background .18s, color .18s;
   }
-  .btn:hover { background: rgba(216,162,74,.26); }
-  .btn:active { transform: scale(.98); }
-  .card .big { font-size: 64px; font-weight: 700; color: var(--accent); line-height: 1; margin: 8px 0 6px; font-variant-numeric: tabular-nums; }
-  .card .note { font-size: 12px; color: #7d786e; margin-top: 20px; }
+  .btn:hover { background: var(--accent); color: #14110d; }
+  .btn:active { transform: translateY(1px); }
+  .card .big {
+    font-size: 64px; font-weight: 600; color: var(--accent); line-height: 1;
+    margin: 10px 0 8px; font-variant-numeric: tabular-nums; letter-spacing: .04em;
+  }
+  .card .note { font-size: 12px; color: rgba(239,232,214,.42); margin-top: 22px; letter-spacing: .1em; }
 
   /* ---------- 载入 ---------- */
   #loading {
@@ -113,8 +144,8 @@
     align-items: center; justify-content: center; background: #0b0c0e; gap: 18px;
     transition: opacity .6s ease;
   }
-  #loading .txt { font-size: 12px; letter-spacing: .3em; color: var(--dim); }
-  #loading .track { width: 200px; height: 2px; background: rgba(255,255,255,.12); }
+  #loading .txt { font-size: 12px; letter-spacing: .3em; color: rgba(239,232,214,.55); }
+  #loading .track { width: 200px; height: 2px; background: rgba(239,232,214,.14); }
   #loading .track i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
 
   /* ---------- 触屏摇杆 ---------- */
@@ -122,25 +153,46 @@
   #touch.on { display: block; }
   #stick {
     position: absolute; left: 26px; bottom: 26px; width: 132px; height: 132px;
-    border-radius: 50%; border: 1px solid rgba(255,255,255,.22);
-    background: rgba(255,255,255,.05); pointer-events: auto; touch-action: none;
+    border-radius: 50%; border: 1px solid rgba(239,232,214,.28);
+    background: rgba(239,232,214,.05); pointer-events: auto; touch-action: none;
   }
   #stick .knob {
     position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px;
-    border-radius: 50%; background: rgba(255,255,255,.28); border: 1px solid rgba(255,255,255,.4);
+    border-radius: 50%; background: rgba(239,232,214,.24); border: 1px solid rgba(239,232,214,.45);
   }
   #fire {
     position: absolute; right: 30px; bottom: 34px; width: 92px; height: 92px; border-radius: 50%;
-    border: 1px solid rgba(216,162,74,.7); background: rgba(216,162,74,.16);
-    color: #f4d9a8; font-size: 15px; letter-spacing: .1em; pointer-events: auto; touch-action: none;
+    border: 1px solid rgba(232,118,31,.85); background: rgba(232,118,31,.14);
+    color: var(--fg); font-size: 15px; letter-spacing: .16em; pointer-events: auto; touch-action: none;
     font-family: inherit;
   }
-  #fire:active { background: rgba(216,162,74,.4); }
+  #fire:active { background: rgba(232,118,31,.45); }
   #aimpad { position: absolute; right: 0; top: 0; width: 55%; height: 100%; pointer-events: auto; touch-action: none; }
+
+  @media (max-width: 900px) {
+    #hud .top { padding: 22px 24px 0; }
+    .stack { gap: 28px; }
+    .stat .k { font-size: 12px; letter-spacing: .24em; }
+    .stat .v { font-size: 34px; } .stat .v small { font-size: 17px; }
+    .stat.dist .v { font-size: 30px; } .stat.dist .v small { font-size: 14px; }
+    .lamps { grid-template-columns: repeat(4, 22px); gap: 5px; margin-top: 9px; }
+    .lamps i { height: 10px; }
+    .stat .scale { width: 160px; height: 10px; }
+    #clock { font-size: 20px; }
+    #hud .bottom { padding: 0 24px 24px; }
+    #reload { width: 240px; }
+    #reload .lbl { font-size: 12px; margin-bottom: 8px; }
+    #reload .bar { height: 14px; }
+    #reload .bar b { height: 22px; }
+    #dial svg { width: 120px; height: 120px; }
+  }
   @media (max-width: 620px) {
-    .stat .v { font-size: 22px; }
-    #reload { width: 130px; }
-    #cross { transform: scale(.85); }
+    .stack { gap: 22px; }
+    .stat .v { font-size: 28px; } .stat .v small { font-size: 14px; }
+    .stat.dist .v { font-size: 24px; }
+    #reload { width: 170px; }
+    #dial svg { width: 96px; height: 96px; }
+    #cross { transform: scale(.9); }
   }
 </style>
 </head>
@@ -148,10 +200,21 @@
 <div id="app"></div>
 
 <div id="hud">
+  <div class="vig"></div>
+  <div class="grain"></div>
+
   <div class="top">
-    <div class="stat">
-      <div class="item"><div class="k">击毁</div><div class="v"><span id="kill">0</span><small> / 8</small></div></div>
-      <div class="item"><div class="k">距离</div><div class="v"><span id="dist">0</span><small> m</small></div></div>
+    <div class="stack">
+      <div class="stat">
+        <div class="k">击毁</div>
+        <div class="v"><span id="kill">0</span><small> / 8</small></div>
+        <div class="lamps" id="lamps"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="stat dist">
+        <div class="k">距离</div>
+        <div class="v"><span id="dist">0</span><small> m</small></div>
+        <div class="scale"></div>
+      </div>
     </div>
     <div id="clock">00:00</div>
   </div>
@@ -160,10 +223,28 @@
 
   <div class="bottom">
     <div id="reload">
-      <div class="bar"><i id="reloadbar"></i></div>
       <div class="lbl" id="reloadlbl">装填完毕</div>
+      <div class="bar">
+        <i id="reloadbar"></i>
+        <b style="left:10%"></b><b style="left:30%"></b><b style="left:50%"></b><b style="left:70%"></b><b style="left:90%"></b>
+      </div>
     </div>
-    <div id="spd"><b id="kmh">0</b> <span>km/h</span></div>
+    <div id="dial">
+      <svg viewBox="0 0 164 164" aria-hidden="true">
+        <circle cx="82" cy="82" r="70" fill="rgba(10,9,7,.38)" stroke="rgba(239,232,214,.45)"/>
+        <path d="M 26 122 A 70 70 0 1 1 138 122" fill="none" stroke="rgba(239,232,214,.22)"/>
+        <g stroke="rgba(239,232,214,.55)" stroke-width="1.5">
+          <line x1="82" y1="12" x2="82" y2="22"/><line x1="82" y1="142" x2="82" y2="152"/>
+          <line x1="12" y1="82" x2="22" y2="82"/><line x1="142" y1="82" x2="152" y2="82"/>
+        </g>
+        <g id="needle">
+          <line x1="82" y1="82" x2="82" y2="22" stroke="#e8761f" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="82" cy="82" r="4.5" fill="#e8761f"/>
+        </g>
+        <text id="kmh" x="82" y="114" fill="#efe8d6" font-size="34" text-anchor="middle" font-family="Bahnschrift, sans-serif">0</text>
+        <text x="82" y="132" fill="#efe8d6" font-size="10" text-anchor="middle" letter-spacing="3" opacity=".75" font-family="Bahnschrift, sans-serif">KM/H</text>
+      </svg>
+    </div>
   </div>
 
   <div id="tip">WASD 驾驶 · 鼠标转向炮塔 · 左键开火</div>
@@ -1232,13 +1313,20 @@ const el = {
   kmh: document.getElementById('kmh'),
   reloadbar: document.getElementById('reloadbar'),
   reloadlbl: document.getElementById('reloadlbl'),
+  lamps: Array.from(document.querySelectorAll('#lamps i')),
+  needle: document.getElementById('needle'),
 };
 let hudTimer = 0;
 
 function updateHud() {
   el.kill.textContent = state.kills;
+  for (let i = 0; i < el.lamps.length; i++) el.lamps[i].classList.toggle('on', i < state.kills);
   const kmh = Math.abs(state.speed) * 3.6;
   el.kmh.textContent = kmh.toFixed(0);
+  if (el.needle) {
+    const deg = -135 + Math.min(kmh / 30, 1) * 270;
+    el.needle.setAttribute('transform', 'rotate(' + deg.toFixed(1) + ' 82 82)');
+  }
   const m = Math.floor(state.time / 60), s = Math.floor(state.time % 60);
   el.clock.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
   const rr = 1 - state.reload / RELOAD_TIME;
