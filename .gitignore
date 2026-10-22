@@ -2,3 +2,6 @@
 *.blend2
 Thumbs.db
 .DS_Store
+
+_mock/
+_preview/

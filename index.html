@@ -169,6 +169,74 @@
   #fire:active { background: rgba(232,118,31,.45); }
   #aimpad { position: absolute; right: 0; top: 0; width: 55%; height: 100%; pointer-events: auto; touch-action: none; }
 
+  /* ---------- 选炮（车库式） ---------- */
+  #select { z-index: 22; }
+  #select .garage { width: min(1140px, 93vw); }
+  .garage-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 20px; border-bottom: 1px solid var(--line); padding-bottom: 14px;
+  }
+  .garage-head .eyebrow { font-size: 11px; letter-spacing: .38em; color: var(--accent); }
+  .garage-head h2 {
+    margin: 0; font-size: clamp(22px, 3.2vw, 30px); font-weight: 500;
+    letter-spacing: .2em;
+  }
+  .garage-body { display: grid; grid-template-columns: 340px 1fr; }
+  .gunlist { border-right: 1px solid var(--line); }
+  .gun-item {
+    position: relative; display: grid; grid-template-columns: 46px 1fr;
+    gap: 10px; padding: 22px 20px 22px 4px; cursor: pointer;
+    border-bottom: 1px solid rgba(239,232,214,.14);
+    transition: background .16s;
+  }
+  .gun-item:hover { background: rgba(239,232,214,.045); }
+  .gun-item.on { background: rgba(232,118,31,.11); }
+  .gun-item.on::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--accent);
+  }
+  .gun-item .no { font-size: 12px; letter-spacing: .16em; color: rgba(239,232,214,.45); padding-top: 4px; }
+  .gun-item .nm { font-size: 19px; letter-spacing: .08em; }
+  .gun-item .ds { font-size: 11px; letter-spacing: .14em; color: rgba(239,232,214,.52); margin-top: 8px; }
+  .gun-item .tag {
+    display: inline-block; margin-top: 12px; font-size: 10px; letter-spacing: .2em;
+    border: 1px solid rgba(239,232,214,.28); padding: 3px 7px 2px; color: rgba(239,232,214,.7);
+  }
+  .gun-item.on .tag { border-color: rgba(232,118,31,.75); color: var(--accent); }
+  .gunview { padding-left: 34px; min-width: 0; }
+  .gunview-img {
+    position: relative; border: 1px solid rgba(239,232,214,.2);
+    background: #0e0f11; overflow: hidden; aspect-ratio: 4 / 3;
+  }
+  .gunview-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gunview-img::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 90% at 50% 40%, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%);
+  }
+  .gunview-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 18px 0 14px; }
+  .gunview-name { font-size: 26px; letter-spacing: .1em; }
+  .gunview-code { font-size: 11px; letter-spacing: .22em; color: rgba(239,232,214,.55); margin-top: 7px; }
+  .gunspecs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 26px; }
+  .gunspec { border-top: 1px solid rgba(239,232,214,.16); padding: 8px 0 0; }
+  .gunspec .k { font-size: 10px; letter-spacing: .26em; color: rgba(239,232,214,.48); }
+  .gunspec .v { font-size: 15px; margin-top: 5px; letter-spacing: .04em; }
+  .garage-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    border-top: 1px solid var(--line); margin-top: 26px; padding-top: 20px;
+  }
+  .garage-foot .hint { font-size: 11px; letter-spacing: .2em; color: rgba(239,232,214,.42); }
+
+  @media (max-width: 900px) {
+    .garage-body { grid-template-columns: 1fr; }
+    .gunlist { border-right: 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; }
+    .gun-item { padding: 14px 12px 14px 10px; border-bottom: 0; }
+    .gun-item .nm { font-size: 15px; }
+    .gun-item .ds { display: none; }
+    .gun-item .tag { display: none; }
+    .gunview { padding-left: 0; padding-top: 16px; }
+    .gunview-name { font-size: 20px; }
+    .gunspecs { grid-template-columns: 1fr 1fr; }
+    .garage-foot .hint { display: none; }
+  }
   @media (max-width: 900px) {
     #hud .top { padding: 22px 24px 0; }
     .stack { gap: 28px; }
@@ -242,7 +310,7 @@
           <circle cx="82" cy="82" r="4.5" fill="#e8761f"/>
         </g>
         <text id="kmh" x="82" y="114" fill="#efe8d6" font-size="34" text-anchor="middle" font-family="Bahnschrift, sans-serif">0</text>
-        <text x="82" y="132" fill="#efe8d6" font-size="10" text-anchor="middle" letter-spacing="3" opacity=".75" font-family="Bahnschrift, sans-serif">KM/H</text>
+        <text id="dialunit" x="82" y="132" fill="#efe8d6" font-size="10" text-anchor="middle" letter-spacing="2" opacity=".75" font-family="Bahnschrift, sans-serif">KM/H</text>
       </svg>
     </div>
   </div>
@@ -256,21 +324,40 @@
   <button id="fire">开火</button>
 </div>
 
+<div id="select" class="overlay hidden">
+  <div class="garage">
+    <div class="garage-head">
+      <div class="eyebrow">Armoury · 1943</div>
+      <h2>选择火炮</h2>
+    </div>
+    <div class="garage-body">
+      <div class="gunlist" id="gunlist"></div>
+      <div class="gunview">
+        <div class="gunview-img"><img id="gunimg" alt=""></div>
+        <div class="gunview-top">
+          <div>
+            <div class="gunview-name" id="gunname">—</div>
+            <div class="gunview-code" id="guncode">—</div>
+          </div>
+          <div class="gunspecs" id="gunspecs"></div>
+        </div>
+      </div>
+    </div>
+    <div class="garage-foot">
+      <div class="hint">↑ / ↓ 切换 · 回车确认</div>
+      <button class="btn" id="deploybtn">出 击</button>
+    </div>
+  </div>
+</div>
+
 <div id="start" class="overlay hidden">
   <div class="card">
-    <div class="eyebrow">Panzerkampfwagen VI · Tiger I</div>
-    <h1>靶场 · 131</h1>
-    <h2>开坦克，把场上的靶子全部打掉</h2>
-    <div class="keys">
-      <kbd>W / S</kbd><span>前进 / 倒车</span>
-      <kbd>A / D</kbd><span>左转 / 右转（可原地转向）</span>
-      <kbd>鼠标</kbd><span>转动炮塔与炮管</span>
-      <kbd>左键 / 空格</kbd><span>开火</span>
-      <kbd>滚轮</kbd><span>拉远拉近镜头</span>
-      <kbd>R</kbd><span>重来</span>
-    </div>
+    <div class="eyebrow" id="starteyebrow">Panzerkampfwagen VI · Tiger I</div>
+    <h1 id="starttitle">靶场 · 131</h1>
+    <h2 id="startsub">开坦克，把场上的靶子全部打掉</h2>
+    <div class="keys" id="startkeys"></div>
     <button class="btn" id="startbtn">开 始</button>
-    <div class="note">8 个靶子，有的是静止的，有的在铁轨上跑</div>
+    <div class="note" id="startnote">8 个靶子，有的是静止的，有的在铁轨上跑</div>
   </div>
 </div>
 
@@ -664,67 +751,259 @@ const state = {
 
 const loadbar = document.getElementById('loadbar');
 const loader = new GLTFLoader();
-loader.load('./tiger.glb', (gltf) => {
-  const model = gltf.scene;
-  model.traverse(o => {
-    if (o.isMesh) {
-      o.castShadow = true;
-      o.receiveShadow = true;
-      if (o.material) {
-        o.material.metalness = Math.min(o.material.metalness ?? 0, 0.35);
-        o.material.roughness = Math.max(o.material.roughness ?? 1, 0.55);
-      }
-    }
+
+/* ============================================================
+   火炮阵容
+   ------------------------------------------------------------
+   每一门炮 = 一个模型 + 一份参数表。新增火炮只要往 GUNS 里加一项，
+   主循环不用动：模型节点名 / 装填 / 弹速 / 能不能开 / 瞄准方式 / 表盘
+   ============================================================ */
+const GUNS = [
+  {
+    id: 'tiger',
+    no: '01',
+    name: '虎式 I 型',
+    code: 'Pz.Kpfw. VI Ausf. E · 1943',
+    tag: '装甲车辆',
+    model: './tiger.glb',
+    img: './img/tiger_hero.png',
+    eyebrow: 'Panzerkampfwagen VI · Tiger I',
+    title: '靶场 · 131',
+    sub: '开坦克，把场上的靶子全部打掉',
+    note: '8 个靶子，有的是静止的，有的在铁轨上跑',
+    specs: [['口径', '88 mm KwK 36'], ['装填', '2.4 秒'], ['炮塔', '可旋转'], ['机动', '可行驶']],
+    keys: [
+      ['W / S', '前进 / 倒车'],
+      ['A / D', '左转 / 右转（可原地转向）'],
+      ['鼠标', '转动炮塔与炮管'],
+      ['左键 / 空格', '开火'],
+      ['滚轮', '拉远拉近镜头'],
+      ['R', '重来'],
+    ],
+    nodes: { turret: 'Turret_Pivot', gun: 'Gun' },
+    spawn: { x: 0, z: 20, yaw: 0 },
+    camDist: 17,
+    reload: 2.4,
+    shellSpeed: 130,
+    gravity: 9.81,
+    ballistic: false,
+    aim: 'turret',
+    turretSpeed: 1.35,
+    pitchSpeed: 0.55,
+    pitch: [-0.14, 0.34],
+    recoil: 0.34,
+    drive: true,
+    dial: { unit: 'KM/H', max: 30, value: s => Math.abs(s.speed) * 3.6 },
+    tip: 'WASD 驾驶 · 鼠标转向炮塔 · 左键开火',
+  },
+  {
+    id: 'ming',
+    no: '02',
+    name: '明代前装炮',
+    code: '崇祯年造 · 铁铸前装炮',
+    tag: '固定炮位',
+    model: './ming_cannon.glb',
+    img: './img/ming_hero.png',
+    eyebrow: 'Ming Dynasty · Cast Iron Muzzle-Loader',
+    title: '炮台 · 崇祯',
+    sub: '整门炮原地转，慢，但一炮一个',
+    note: '前膛装填 9 秒 · 无炮塔 · 弹道下沉',
+    specs: [['口径', '约 100 mm'], ['装填', '9.0 秒'], ['炮架', '整门旋转'], ['机动', '固定炮位']],
+    keys: [
+      ['鼠标', '瞄准（整门缓慢跟随）'],
+      ['左键 / 空格', '开火'],
+      ['滚轮', '拉远拉近镜头'],
+      ['R', '重来'],
+    ],
+    nodes: { turret: null, gun: 'Cannon_Barrel' },
+    spawn: { x: 0, z: 18, yaw: 0 },
+    camDist: 10,
+    cam: { y: 1.55, h: 1.9, ahead: 11 },
+    reload: 9.0,
+    shellSpeed: 88,
+    gravity: 13,
+    ballistic: true,
+    aim: 'chassis',
+    traverse: 0.6,
+    pitchSpeed: 0.25,
+    pitch: [-0.04, 0.42],
+    recoil: 0.5,
+    drive: false,
+    dial: { unit: '仰角 °', max: 30, value: s => THREE.MathUtils.radToDeg(s.gunPitch) },
+    tip: '鼠标瞄准 · 整门缓慢跟随 · 左键开火',
+  },
+];
+
+let gun = GUNS[0];
+let gunIndex = 0;
+const models = {};
+const selectEl = document.getElementById('select');
+const gunlistEl = document.getElementById('gunlist');
+
+function buildGunList() {
+  gunlistEl.innerHTML = '';
+  GUNS.forEach((g, i) => {
+    const d = document.createElement('div');
+    d.className = 'gun-item';
+    d.innerHTML = '<div class="no">' + g.no + '</div>'
+      + '<div><div class="nm">' + g.name + '</div>'
+      + '<div class="ds">' + g.code + '</div>'
+      + '<div class="tag">' + g.tag + '</div></div>';
+    d.addEventListener('click', () => selectGun(i));
+    gunlistEl.appendChild(d);
   });
+}
+
+function selectGun(i) {
+  gunIndex = i;
+  const g = GUNS[i];
+  [...gunlistEl.children].forEach((c, k) => c.classList.toggle('on', k === i));
+  document.getElementById('gunimg').src = g.img;
+  document.getElementById('gunname').textContent = g.name;
+  document.getElementById('guncode').textContent = g.code;
+  document.getElementById('gunspecs').innerHTML = g.specs
+    .map(([k, v]) => '<div class="gunspec"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>')
+    .join('');
+}
+
+function applyGunCopy() {
+  document.getElementById('starteyebrow').textContent = gun.eyebrow;
+  document.getElementById('starttitle').textContent = gun.title;
+  document.getElementById('startsub').textContent = gun.sub;
+  document.getElementById('startnote').textContent = gun.note;
+  document.getElementById('startkeys').innerHTML = gun.keys
+    .map(([k, v]) => '<kbd>' + k + '</kbd><span>' + v + '</span>').join('');
+  document.getElementById('tip').textContent = gun.tip;
+  const unit = document.getElementById('dialunit');
+  if (unit) unit.textContent = gun.dial.unit;
+  document.title = gun.name + ' · 靶场';
+}
+
+/* ---- 把选中的模型装进 rig ---- */
+function useGun(g) {
+  gun = g;
+  const model = models[g.id];
+  if (!model) return;
+
+  while (tank.children.length) tank.remove(tank.children[0]);
+  rig.turret = null;
+  rig.gun = null;
+  rig.muzzle = null;
+  rig.wheels = [];
+  rig.tracks = { L: null, R: null };
   tank.add(model);
 
-  rig.turret = model.getObjectByName('Turret_Pivot');
-  rig.gun = model.getObjectByName('Gun');
-  if (rig.gun) rig.gunBase = rig.gun.position.clone();
+  if (g.nodes.turret) rig.turret = model.getObjectByName(g.nodes.turret);
+  if (g.nodes.gun) rig.gun = model.getObjectByName(g.nodes.gun);
 
-  // 炮口位置：炮管几何体最前端
   if (rig.gun) {
-    const g = rig.gun.geometry;
-    if (!g.boundingBox) g.computeBoundingBox();
-    const bb = g.boundingBox;
-    rig.muzzle = new THREE.Object3D();
-    rig.muzzle.position.set(0, (bb.min.y + bb.max.y) / 2, bb.min.z - 0.15);
-    rig.gun.add(rig.muzzle);
+    rig.gunBase = rig.gun.position.clone();
+    // 炮口：炮管几何体最前端（模型 +Y 朝前 → three 里是 -Z）
+    const old = rig.gun.getObjectByName('__muzzle');
+    if (old) rig.gun.remove(old);
+    const geo = rig.gun.geometry;
+    if (geo) {
+      if (!geo.boundingBox) geo.computeBoundingBox();
+      const bb = geo.boundingBox;
+      rig.muzzle = new THREE.Object3D();
+      rig.muzzle.name = '__muzzle';
+      rig.muzzle.position.set(0, (bb.min.y + bb.max.y) / 2, bb.min.z - 0.15);
+      rig.gun.add(rig.muzzle);
+    }
   }
 
-  // 负重轮
-  model.traverse(o => {
-    if (/^Wheel_[LR]_/.test(o.name)) rig.wheels.push({ obj: o, side: o.name.includes('_L_') ? 'L' : 'R' });
-  });
-
-  // 履带
-  const left = [], right = [];
-  model.traverse(o => {
-    if (/^Track_L_/.test(o.name)) left.push(o);
-    if (/^Track_R_/.test(o.name)) right.push(o);
-  });
-  if (left.length) rig.tracks.L = buildTrack(left);
-  if (right.length) rig.tracks.R = buildTrack(right);
+  if (g.id === 'tiger') {
+    model.traverse(o => {
+      if (/^Wheel_[LR]_/.test(o.name)) rig.wheels.push({ obj: o, side: o.name.includes('_L_') ? 'L' : 'R' });
+    });
+    const left = [], right = [];
+    model.traverse(o => {
+      if (/^Track_L_/.test(o.name)) left.push(o);
+      if (/^Track_R_/.test(o.name)) right.push(o);
+    });
+    if (left.length) rig.tracks.L = buildTrack(left);
+    if (right.length) rig.tracks.R = buildTrack(right);
+  }
 
   rig.ready = true;
+  window.__game = { state, targets, camera, fire, startGame, resetGame, rig, shells, win, GUNS, useGun, get gun() { return gun; } };
+}
+
+/* ---- 载入两门炮 ---- */
+const prog = {};
+function loadProgress() {
+  let sum = 0;
+  for (const g of GUNS) sum += (prog[g.id] ?? 0);
+  loadbar.style.width = ((sum / GUNS.length) * 100).toFixed(0) + '%';
+}
+let loadedCount = 0;
+for (const g of GUNS) {
+  loader.load(g.model, (gltf) => {
+    const model = gltf.scene;
+    model.traverse(o => {
+      if (o.isMesh) {
+        o.castShadow = true;
+        o.receiveShadow = true;
+        if (o.material) {
+          o.material.metalness = Math.min(o.material.metalness ?? 0, 0.35);
+          o.material.roughness = Math.max(o.material.roughness ?? 1, 0.55);
+        }
+      }
+    });
+    models[g.id] = model;
+    prog[g.id] = 1;
+    loadProgress();
+    if (++loadedCount === GUNS.length) afterLoad();
+  }, (e) => {
+    if (e.total) { prog[g.id] = e.loaded / e.total; loadProgress(); }
+  }, (err) => {
+    console.error(err);
+    document.querySelector('#loading .txt').textContent = '模型载入失败';
+  });
+}
+
+function afterLoad() {
+  loadbar.style.width = '100%';
   document.getElementById('loading').style.opacity = '0';
-  setTimeout(() => document.getElementById('loading').style.display = 'none', 650);
-  if (!state.running) document.getElementById('start').classList.remove('hidden');
-  window.__game = { state, targets, camera, fire, startGame, resetGame, rig, shells, win };
+  setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 600);
+  buildGunList();
+  selectGun(0);
+  selectEl.classList.remove('hidden');
   window.__dbg = () => ({
     ready: rig.ready,
-    turret: !!rig.turret, gun: !!rig.gun, muzzle: !!rig.muzzle,
+    gun: gun.id,
+    turret: !!rig.turret,
+    barrel: !!rig.gun,
+    muzzle: !!rig.muzzle,
     wheels: rig.wheels.length,
-    tracksL: rig.tracks.L?.objs.length, tracksR: rig.tracks.R?.objs.length,
-    trackLen: rig.tracks.L?.total,
+    tracksL: rig.tracks.L && rig.tracks.L.objs.length,
+    tracksR: rig.tracks.R && rig.tracks.R.objs.length,
     targets: targets.length,
     state,
   });
-}, (e) => {
-  if (e.total) loadbar.style.width = (e.loaded / e.total * 100).toFixed(0) + '%';
-}, (err) => {
-  console.error(err);
-  document.querySelector('#loading .txt').textContent = '模型载入失败';
+}
+
+document.getElementById('deploybtn').addEventListener('click', () => {
+  useGun(GUNS[gunIndex]);
+  applyGunCopy();
+  selectEl.classList.add('hidden');
+  resetGame();
+  document.getElementById('start').classList.remove('hidden');
+});
+
+// 选炮界面的键盘操作
+addEventListener('keydown', (e) => {
+  if (selectEl.classList.contains('hidden')) return;
+  const k = e.key;
+  if (k === 'ArrowUp' || k === 'ArrowDown' || k === 'w' || k === 's') {
+    e.preventDefault();
+    const n = GUNS.length;
+    const step = (k === 'ArrowUp' || k === 'w') ? -1 : 1;
+    selectGun((gunIndex + step + n) % n);
+  } else if (k === 'Enter' || k === ' ') {
+    e.preventDefault();
+    document.getElementById('deploybtn').click();
+  }
 });
 
 /**
@@ -901,8 +1180,19 @@ function noiseHit(dur, freq, gain, q = 1) {
   src.connect(flt); flt.connect(g); g.connect(actx.destination);
   src.start(); src.stop(actx.currentTime + dur + .05);
 }
-function fireSound() {
+function fireSound(black) {
   if (!actx) return;
+  if (black) {
+    // 黑火药：闷、长、低频
+    noiseHit(.75, 1100, .62, .7);
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(78, actx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(26, actx.currentTime + .7);
+    g.gain.setValueAtTime(.7, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + .8);
+    o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + .85);
+    return;
+  }
   noiseHit(.28, 2200, .5, .8);
   const o = actx.createOscillator(), g = actx.createGain();
   o.type = 'sine'; o.frequency.setValueAtTime(120, actx.currentTime);
@@ -1008,81 +1298,93 @@ document.getElementById('fire').addEventListener('pointerdown', (e) => { e.preve
    开火
    ============================================================ */
 function fire() {
-  if (!state.running || state.over || state.reload > 0 || !rig.ready) return;
-  state.reload = RELOAD_TIME;
-  state.recoil = 0.34;
-  fireSound();
+  if (!state.running || state.over || state.reload > 0 || !rig.ready || !rig.muzzle) return;
+  state.reload = gun.reload;
+  state.recoil = gun.recoil;
+  const black = gun.id === 'ming';
+  fireSound(black);
 
   const origin = new THREE.Vector3();
   rig.muzzle.getWorldPosition(origin);
-  const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(rig.muzzle.getWorldQuaternion(new THREE.Quaternion())).normalize();
+  const q = rig.muzzle.getWorldQuaternion(new THREE.Quaternion());
+  const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(q).normalize();
 
   const mesh = new THREE.Mesh(shellGeo, shellMat);
+  if (black) mesh.scale.setScalar(1.6);
   mesh.position.copy(origin);
-  mesh.quaternion.copy(rig.muzzle.getWorldQuaternion(new THREE.Quaternion()));
+  mesh.quaternion.copy(q);
   shellScene.add(mesh);
   shells.push({
     mesh,
     pos: origin.clone(),
     prev: origin.clone(),
-    vel: dir.clone().multiplyScalar(SHELL_SPEED),
+    vel: dir.clone().multiplyScalar(gun.shellSpeed),
+    g: gun.gravity,
     life: 0,
     trail: 0,
   });
 
-  // 炮口烟
-  spawnPuff(origin.clone(), { color: 0xd8d2c4, size: 1.1, endSize: 5, life: .9, opacity: .75, vel: dir.clone().multiplyScalar(4).add(new THREE.Vector3(0, 1, 0)) });
-  spawnPuff(origin.clone(), { color: 0xffd07a, size: .9, endSize: 2.6, life: .16, opacity: 1, additive: true, vel: dir.clone().multiplyScalar(6) });
+  // 炮口烟（前膛炮：白烟更浓）
+  spawnPuff(origin.clone(), { color: 0xd8d2c4, size: black ? 1.8 : 1.1, endSize: black ? 8 : 5, life: black ? 1.6 : .9, opacity: .78, vel: dir.clone().multiplyScalar(black ? 7 : 4).add(new THREE.Vector3(0, 1.2, 0)) });
+  spawnPuff(origin.clone(), { color: 0xffd07a, size: black ? 1.4 : .9, endSize: black ? 4 : 2.6, life: .18, opacity: 1, additive: true, vel: dir.clone().multiplyScalar(6) });
 }
 
 /* ============================================================
    更新
    ============================================================ */
 function updateTank(dt) {
-  const thr = (keys['w'] || keys['arrowup'] ? 1 : 0) - (keys['s'] || keys['arrowdown'] ? 1 : 0) - stickVec.y;
-  const str = (keys['a'] || keys['arrowleft'] ? 1 : 0) - (keys['d'] || keys['arrowright'] ? 1 : 0) - stickVec.x;
+  const canDrive = !!gun.drive;
+  const thr = canDrive ? (keys['w'] || keys['arrowup'] ? 1 : 0) - (keys['s'] || keys['arrowdown'] ? 1 : 0) - stickVec.y : 0;
+  const str = canDrive ? (keys['a'] || keys['arrowleft'] ? 1 : 0) - (keys['d'] || keys['arrowright'] ? 1 : 0) - stickVec.x : 0;
 
-  const targetSpeed = thr >= 0 ? thr * TANK.maxSpeed : thr * TANK.maxSpeed * TANK.reverse;
-  const rate = Math.abs(targetSpeed) > Math.abs(state.speed) ? TANK.accel : TANK.brake;
-  const diff = targetSpeed - state.speed;
-  state.speed += Math.sign(diff) * Math.min(Math.abs(diff), rate * dt);
-  if (Math.abs(state.speed) < 0.02) state.speed = 0;
+  if (canDrive) {
+    const targetSpeed = thr >= 0 ? thr * TANK.maxSpeed : thr * TANK.maxSpeed * TANK.reverse;
+    const rate = Math.abs(targetSpeed) > Math.abs(state.speed) ? TANK.accel : TANK.brake;
+    const diff = targetSpeed - state.speed;
+    state.speed += Math.sign(diff) * Math.min(Math.abs(diff), rate * dt);
+    if (Math.abs(state.speed) < 0.02) state.speed = 0;
 
-  const targetTurn = THREE.MathUtils.clamp(str, -1, 1) * TANK.maxTurn;
-  state.turn += (targetTurn - state.turn) * Math.min(1, dt * 5);
+    const targetTurn = THREE.MathUtils.clamp(str, -1, 1) * TANK.maxTurn;
+    state.turn += (targetTurn - state.turn) * Math.min(1, dt * 5);
 
-  state.yaw += state.turn * dt;
+    state.yaw += state.turn * dt;
 
-  const fwd = new THREE.Vector3(-Math.sin(state.yaw), 0, -Math.cos(state.yaw));
-  state.x += fwd.x * state.speed * dt;
-  state.z += fwd.z * state.speed * dt;
+    const fwd = new THREE.Vector3(-Math.sin(state.yaw), 0, -Math.cos(state.yaw));
+    state.x += fwd.x * state.speed * dt;
+    state.z += fwd.z * state.speed * dt;
 
-  // 边界
-  const r = Math.hypot(state.x, state.z);
-  if (r > ARENA_R - TANK_RADIUS) {
-    state.x *= (ARENA_R - TANK_RADIUS) / r;
-    state.z *= (ARENA_R - TANK_RADIUS) / r;
-    state.speed *= 0.3;
-  }
-  // 障碍
-  for (const b of obstacles) {
-    const cx = THREE.MathUtils.clamp(state.x, b.min.x, b.max.x);
-    const cz = THREE.MathUtils.clamp(state.z, b.min.z, b.max.z);
-    let dx = state.x - cx, dz = state.z - cz;
-    let d2 = dx * dx + dz * dz;
-    if (d2 < TANK_RADIUS * TANK_RADIUS) {
-      if (d2 < 1e-4) { dx = 0; dz = 1; d2 = 1; }
-      const d = Math.sqrt(d2);
-      state.x = cx + dx / d * TANK_RADIUS;
-      state.z = cz + dz / d * TANK_RADIUS;
-      state.speed *= 0.45;
+    // 边界
+    const r = Math.hypot(state.x, state.z);
+    if (r > ARENA_R - TANK_RADIUS) {
+      state.x *= (ARENA_R - TANK_RADIUS) / r;
+      state.z *= (ARENA_R - TANK_RADIUS) / r;
+      state.speed *= 0.3;
     }
+    // 障碍
+    for (const b of obstacles) {
+      const cx = THREE.MathUtils.clamp(state.x, b.min.x, b.max.x);
+      const cz = THREE.MathUtils.clamp(state.z, b.min.z, b.max.z);
+      let dx = state.x - cx, dz = state.z - cz;
+      let d2 = dx * dx + dz * dz;
+      if (d2 < TANK_RADIUS * TANK_RADIUS) {
+        if (d2 < 1e-4) { dx = 0; dz = 1; d2 = 1; }
+        const d = Math.sqrt(d2);
+        state.x = cx + dx / d * TANK_RADIUS;
+        state.z = cz + dz / d * TANK_RADIUS;
+        state.speed *= 0.45;
+      }
+    }
+  } else {
+    // 固定炮位：不动
+    state.speed = 0;
+    state.turn = 0;
   }
 
   tank.position.set(state.x, 0, state.z);
   tank.rotation.y = state.yaw;
 
   // 履带 / 负重轮
+  if (!canDrive) return;
   const vL = state.speed - state.turn * TANK.halfTrack;
   const vR = state.speed + state.turn * TANK.halfTrack;
   for (const side of ['L', 'R']) {
@@ -1110,10 +1412,11 @@ function animateTrack(tr) {
 }
 
 function updateAim(dt) {
+  const hasTurret = gun.aim === 'turret' && !!rig.turret;
   // 目标瞄准点
   let aimYaw = state.aimYaw, aimPitch = state.aimPitch;
 
-  if (!isTouch) {
+  if (!isTouch && !window.__noMouseAim) {
     const ray = new THREE.Raycaster();
     ray.setFromCamera(mouse, camera);
     let point = null;
@@ -1129,34 +1432,49 @@ function updateAim(dt) {
       point = ray.ray.intersectPlane(plane, new THREE.Vector3());
     }
     if (point) {
-      const turretPos = new THREE.Vector3();
-      rig.turret.getWorldPosition(turretPos);
-      const d = point.clone().sub(turretPos);
+      const ref = new THREE.Vector3();
+      (hasTurret ? rig.turret : (rig.gun || tank)).getWorldPosition(ref);
+      const d = point.clone().sub(ref);
       const horiz = Math.hypot(d.x, d.z);
       if (horiz > 3) {
         aimYaw = Math.atan2(-d.x, -d.z);
         aimPitch = Math.atan2(d.y, horiz);
+        // 慢炮：按弹道解算仰角，炮口指哪打哪，但飞行时间长
+        if (gun.ballistic) {
+          const v = gun.shellSpeed, g2 = gun.gravity;
+          const h = point.y - ref.y;
+          const disc = v * v * v * v - g2 * (g2 * horiz * horiz + 2 * h * v * v);
+          if (disc >= 0) aimPitch = Math.atan((v * v - Math.sqrt(disc)) / (g2 * horiz));
+        }
       }
     }
     state.aimYaw = aimYaw;
     state.aimPitch = aimPitch;
   }
 
-  // 炮塔转向（限速）
-  let wantLocal = normalizeAngle(state.aimYaw - state.yaw);
-  const dYaw = normalizeAngle(wantLocal - state.turretYaw);
-  const maxYaw = 1.35 * dt;
-  state.turretYaw += THREE.MathUtils.clamp(dYaw, -maxYaw, maxYaw);
-  state.turretYaw = normalizeAngle(state.turretYaw);
+  if (hasTurret) {
+    // 炮塔转向（限速）
+    const wantLocal = normalizeAngle(state.aimYaw - state.yaw);
+    const dYaw = normalizeAngle(wantLocal - state.turretYaw);
+    const maxYaw = gun.turretSpeed * dt;
+    state.turretYaw += THREE.MathUtils.clamp(dYaw, -maxYaw, maxYaw);
+    state.turretYaw = normalizeAngle(state.turretYaw);
+    rig.turret.rotation.y = state.turretYaw;
+  } else {
+    // 无炮塔：整门转，慢
+    const dYaw = normalizeAngle(state.aimYaw - state.yaw);
+    const maxYaw = (gun.traverse ?? 0.6) * dt;
+    state.yaw += THREE.MathUtils.clamp(dYaw, -maxYaw, maxYaw);
+    state.turretYaw = 0;
+  }
 
   // 炮管俯仰
-  const wantPitch = THREE.MathUtils.clamp(state.aimPitch, -0.14, 0.34);
+  const wantPitch = THREE.MathUtils.clamp(state.aimPitch, gun.pitch[0], gun.pitch[1]);
   const dP = wantPitch - state.gunPitch;
-  state.gunPitch += THREE.MathUtils.clamp(dP, -0.55 * dt, 0.55 * dt);
+  state.gunPitch += THREE.MathUtils.clamp(dP, -gun.pitchSpeed * dt, gun.pitchSpeed * dt);
 
-  if (rig.turret) rig.turret.rotation.y = state.turretYaw;
   if (rig.gun) {
-    state.recoil = Math.max(0, state.recoil - dt * 1.6);
+    state.recoil = Math.max(0, state.recoil - dt * (gun.drive ? 1.6 : 1.1));
     rig.gun.rotation.x = state.gunPitch;
     rig.gun.position.z = rig.gunBase.z + state.recoil;
   }
@@ -1197,7 +1515,7 @@ function updateShells(dt) {
   for (let i = shells.length - 1; i >= 0; i--) {
     const s = shells[i];
     s.prev.copy(s.pos);
-    s.vel.y -= GRAVITY * dt;
+    s.vel.y -= (s.g ?? GRAVITY) * dt;
     s.pos.addScaledVector(s.vel, dt);
     s.life += dt;
     s.mesh.position.copy(s.pos);
@@ -1282,19 +1600,23 @@ function updateCamera(dt) {
 
   camDist += (camDistTarget - camDist) * Math.min(1, dt * 6);
   // 相机方向平滑跟随车身（不跟炮塔，否则鼠标指向的世界点会跟着漂）
-  let dy = normalizeAngle(state.yaw - camYaw);
-  camYaw += dy * Math.min(1, dt * 2.6);
+  // 固定炮位：相机不跟着转，否则鼠标瞄准会自激
+  if (gun.aim !== 'chassis') {
+    const dy = normalizeAngle(state.yaw - camYaw);
+    camYaw += dy * Math.min(1, dt * 2.6);
+  }
 
+  const cam = gun.cam || {};
   const behind = new THREE.Vector3(Math.sin(camYaw), 0, Math.cos(camYaw));
-  const target = new THREE.Vector3(state.x, 2.4, state.z);
+  const target = new THREE.Vector3(state.x, cam.y ?? 2.4, state.z);
   const desired = new THREE.Vector3(
     state.x + behind.x * camDist,
-    3.2 + camDist * 0.33,
+    (cam.h ?? 3.2) + camDist * 0.33,
     state.z + behind.z * camDist
   );
 
   camera.position.lerp(desired, Math.min(1, dt * 5));
-  const look = target.clone().add(new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw)).multiplyScalar(7));
+  const look = target.clone().add(new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw)).multiplyScalar(cam.ahead ?? 7));
   camera.lookAt(look);
 
   // 阴影跟着坦克
@@ -1321,15 +1643,15 @@ let hudTimer = 0;
 function updateHud() {
   el.kill.textContent = state.kills;
   for (let i = 0; i < el.lamps.length; i++) el.lamps[i].classList.toggle('on', i < state.kills);
-  const kmh = Math.abs(state.speed) * 3.6;
-  el.kmh.textContent = kmh.toFixed(0);
+  const dialVal = gun.dial.value(state);
+  el.kmh.textContent = dialVal.toFixed(0);
   if (el.needle) {
-    const deg = -135 + Math.min(kmh / 30, 1) * 270;
+    const deg = -135 + Math.min(Math.max(dialVal / gun.dial.max, 0), 1) * 270;
     el.needle.setAttribute('transform', 'rotate(' + deg.toFixed(1) + ' 82 82)');
   }
   const m = Math.floor(state.time / 60), s = Math.floor(state.time % 60);
   el.clock.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-  const rr = 1 - state.reload / RELOAD_TIME;
+  const rr = 1 - state.reload / gun.reload;
   el.reloadbar.style.width = (rr * 100).toFixed(0) + '%';
   el.reloadlbl.textContent = state.reload > 0 ? '装填中…' : '装填完毕';
 
@@ -1352,7 +1674,7 @@ function startGame() {
   state.running = true;
   state.over = false;
   camYaw = state.yaw;
-  camDist = camDistTarget = 17;
+  camDist = camDistTarget = gun.camDist;
   setTimeout(() => { const tip = document.getElementById('tip'); if (tip) tip.style.opacity = '0'; }, 7000);
 }
 
@@ -1365,7 +1687,7 @@ function win() {
 }
 
 function resetGame() {
-  state.x = 0; state.z = 20; state.yaw = 0;
+  state.x = gun.spawn.x; state.z = gun.spawn.z; state.yaw = gun.spawn.yaw;
   state.speed = 0; state.turn = 0;
   state.turretYaw = 0; state.gunPitch = 0.02;
   state.reload = 0; state.recoil = 0;
@@ -1387,8 +1709,8 @@ function togglePause() {
     document.querySelector('#start h1').textContent = '已暂停';
     document.getElementById('startbtn').textContent = '继 续';
   } else {
-    document.querySelector('#start h1').textContent = '靶场 · 131';
-    document.getElementById('startbtn').textContent = '开 始';
+    document.querySelector('#start h1').textContent = gun.title;
+    document.getElementById('startbtn').textContent = '继 续';
   }
 }
 
