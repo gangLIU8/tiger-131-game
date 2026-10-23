@@ -773,7 +773,7 @@ const GUNS = [
     code: 'Pz.Kpfw. VI Ausf. E · 1943',
     tag: '装甲车辆',
     model: './tiger.glb',
-    img: './img/tiger_hero.png',
+    img: './img/tiger_hero.jpg',
     eyebrow: 'Panzerkampfwagen VI · Tiger I',
     title: '靶场 · 131',
     sub: '开坦克，把场上的靶子全部打掉',
@@ -810,7 +810,7 @@ const GUNS = [
     code: '崇祯年造 · 铁铸前装炮',
     tag: '固定炮位',
     model: './ming_cannon.glb',
-    img: './img/ming_hero.png',
+    img: './img/ming_hero.jpg',
     eyebrow: 'Ming Dynasty · Cast Iron Muzzle-Loader',
     title: '炮台 · 崇祯',
     sub: '整门炮原地转，慢，但一炮一个',
@@ -871,6 +871,7 @@ function selectGun(i) {
   document.getElementById('gunspecs').innerHTML = g.specs
     .map(([k, v]) => '<div class="gunspec"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>')
     .join('');
+  schedulePrefetch(i);
 }
 
 function applyGunCopy() {
@@ -936,43 +937,50 @@ function useGun(g) {
   window.__game = { state, targets, camera, fire, startGame, resetGame, rig, shells, win, GUNS, useGun, get gun() { return gun; } };
 }
 
-/* ---- 载入两门炮 ---- */
-const prog = {};
-function loadProgress() {
-  let sum = 0;
-  for (const g of GUNS) sum += (prog[g.id] ?? 0);
-  loadbar.style.width = ((sum / GUNS.length) * 100).toFixed(0) + '%';
-}
-let loadedCount = 0;
-for (const g of GUNS) {
-  loader.load(g.model, (gltf) => {
-    const model = gltf.scene;
-    model.traverse(o => {
-      if (o.isMesh) {
-        o.castShadow = true;
-        o.receiveShadow = true;
-        if (o.material) {
-          o.material.metalness = Math.min(o.material.metalness ?? 0, 0.35);
-          o.material.roughness = Math.max(o.material.roughness ?? 1, 0.55);
+/* ---- 模型按需载入：只下载你选中的那门炮 ---- */
+const modelPromises = {};
+
+function loadGunModel(g) {
+  if (models[g.id]) return Promise.resolve(models[g.id]);
+  if (modelPromises[g.id]) return modelPromises[g.id];
+  modelPromises[g.id] = new Promise((resolve, reject) => {
+    loader.load(g.model, (gltf) => {
+      const model = gltf.scene;
+      model.traverse(o => {
+        if (o.isMesh) {
+          o.castShadow = true;
+          o.receiveShadow = true;
+          if (o.material) {
+            o.material.metalness = Math.min(o.material.metalness ?? 0, 0.35);
+            o.material.roughness = Math.max(o.material.roughness ?? 1, 0.55);
+          }
         }
-      }
+      });
+      models[g.id] = model;
+      resolve(model);
+    }, undefined, (err) => {
+      delete modelPromises[g.id];
+      reject(err);
     });
-    models[g.id] = model;
-    prog[g.id] = 1;
-    loadProgress();
-    if (++loadedCount === GUNS.length) afterLoad();
-  }, (e) => {
-    if (e.total) { prog[g.id] = e.loaded / e.total; loadProgress(); }
-  }, (err) => {
-    console.error(err);
-    document.querySelector('#loading .txt').textContent = '模型载入失败';
   });
+  return modelPromises[g.id];
 }
 
-function afterLoad() {
-  loadbar.style.width = '100%';
+function prefetch(i) {
+  loadGunModel(GUNS[i]).catch(() => {});
+}
+
+/* 选中后稍等一下再下模型：要是玩家马上又点了另一门炮，就只下最后选的那门 */
+let preTimer = 0;
+function schedulePrefetch(i) {
+  clearTimeout(preTimer);
+  preTimer = setTimeout(() => prefetch(i), 700);
+}
+
+function boot() {
+  // 选炮界面不用等模型：车卡图是小图，模型等选中了再下
   document.getElementById('loading').style.opacity = '0';
-  setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 600);
+  setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 500);
   buildGunList();
   selectGun(0);
   selectEl.classList.remove('hidden');
@@ -990,13 +998,29 @@ function afterLoad() {
   });
 }
 
-document.getElementById('deploybtn').addEventListener('click', () => {
-  useGun(GUNS[gunIndex]);
-  applyGunCopy();
-  selectEl.classList.add('hidden');
-  resetGame();
-  document.getElementById('start').classList.remove('hidden');
+const deployBtn = document.getElementById('deploybtn');
+deployBtn.addEventListener('click', async () => {
+  if (deployBtn.dataset.busy) return;
+  const g = GUNS[gunIndex];
+  const label = deployBtn.textContent;
+  deployBtn.dataset.busy = '1';
+  deployBtn.textContent = '载 入 中…';
+  try {
+    await loadGunModel(g);
+    useGun(g);
+    applyGunCopy();
+    selectEl.classList.add('hidden');
+    resetGame();
+    document.getElementById('start').classList.remove('hidden');
+    deployBtn.textContent = label;
+  } catch (err) {
+    console.error(err);
+    deployBtn.textContent = '载入失败 · 再点一次';
+  }
+  deployBtn.dataset.busy = '';
 });
+
+boot();
 
 // 选炮界面的键盘操作
 addEventListener('keydown', (e) => {
