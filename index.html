@@ -995,9 +995,6 @@ function boot() {
     tracksR: rig.tracks.R && rig.tracks.R.objs.length,
     targets: targets.length,
     state,
-    trajVis: trajLine.visible,
-    tgtVis: tgt.visible,
-    trajPts: trajGeo.attributes.position ? trajGeo.attributes.position.count : 0,
   });
 }
 
@@ -1114,21 +1111,6 @@ const shells = [];
 const shellGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.85, 8);
 shellGeo.rotateX(Math.PI / 2);
 const shellMat = new THREE.MeshStandardMaterial({ color: 0xffd79a, emissive: 0xff9c3a, emissiveIntensity: 3, roughness: .4 });
-
-// 弹道预览（只对前装炮）：橙色虚线 + 落点圈，不改难度，只告诉玩家这一炮会落哪
-const trajGeo = new THREE.BufferGeometry();
-const trajMat = new THREE.LineDashedMaterial({ color: 0xe8761f, dashSize: 0.22, gapSize: 0.18, transparent: true, opacity: 0.5 });
-const trajLine = new THREE.Line(trajGeo, trajMat);
-trajLine.frustumCulled = false;
-trajLine.visible = false;
-scene.add(trajLine);
-const tgtGeo = new THREE.CircleGeometry(0.45, 10);
-const tgtMat = new THREE.MeshBasicMaterial({ color: 0xe8761f, transparent: true, opacity: 0.3 });
-const tgt = new THREE.Mesh(tgtGeo, tgtMat);
-tgt.rotation.x = -Math.PI / 2;
-tgt.frustumCulled = false;
-tgt.visible = false;
-scene.add(tgt);
 const shellScene = new THREE.Group();
 scene.add(shellScene);
 
@@ -1532,40 +1514,6 @@ function updateAim(dt) {
   if (state.reload > 0) state.reload = Math.max(0, state.reload - dt);
 }
 
-/* 画这一炮会落哪：弹道虚线 + 落点圈（只对前装炮） */
-function updateTrajectory() {
-  if (!gun.ballistic || !rig.muzzle) {
-    trajLine.visible = false;
-    tgt.visible = false;
-    return;
-  }
-  const ref = new THREE.Vector3();
-  rig.muzzle.getWorldPosition(ref);
-
-  const yaw = state.aimYaw, pitch = state.aimPitch;
-  const v = gun.shellSpeed, g2 = gun.gravity;
-  const dir = new THREE.Vector3(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
-
-  const pts = [];
-  let pos = ref.clone(), vel = dir.clone().multiplyScalar(v);
-  pts.push(pos.clone());
-  let landed = null;
-  for (let i = 0; i < 400; i++) {
-    const dt = 0.02;
-    pos.addScaledVector(vel, dt);
-    vel.y -= g2 * dt;
-    pts.push(pos.clone());
-    if (pos.y <= 0.05) { landed = pos.clone(); break; }
-  }
-
-  trajGeo.setFromPoints(pts);
-  trajGeo.computeLineDistances();
-  trajLine.visible = true;
-
-  if (landed) { tgt.position.copy(landed); tgt.visible = true; }
-  else tgt.visible = false;
-}
-
 function normalizeAngle(a) {
   while (a > Math.PI) a -= Math.PI * 2;
   while (a < -Math.PI) a += Math.PI * 2;
@@ -1824,7 +1772,6 @@ function loop() {
   } else if (paused) {
     // 暂停时保持渲染
   }
-  updateTrajectory();
   updatePuffs(dt);
   updateCamera(dt);
 
